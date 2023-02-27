@@ -26,7 +26,7 @@ namespace WinFormsApp1
         private void btnOpenFileDialog_Click(object sender, EventArgs e)
         {
             fileList.Clear();
-            
+
             openFileDialog1 = new OpenFileDialog();
             openFileDialog1.Multiselect = true;
             DialogResult dr = openFileDialog1.ShowDialog();
@@ -41,39 +41,51 @@ namespace WinFormsApp1
 
         private async void btnStart_ClickAsync(object sender, EventArgs e)
         {
-            if (String.IsNullOrEmpty(insertCharText.Text) && String.IsNullOrEmpty(deleteCharText.Text))
+            try
             {
-                MessageBox.Show("작업을 아무것도 선택하지 않았습니다.");
-                return;
-            }
+                if (String.IsNullOrEmpty(insertCharText.Text) && String.IsNullOrEmpty(deleteCharText.Text))
+                {
+                    MessageBox.Show("작업을 아무것도 선택하지 않았습니다.");
+                    return;
+                }
 
-            if (fileList.Count == 0)
+                if (fileList.Count == 0)
+                {
+                    MessageBox.Show("작업을 아무것도 선택하지 않았습니다.");
+                    return;
+                }
+
+                if (!String.IsNullOrEmpty(insertCharText.Text))
+                {
+                    string[] parse = insertCharText.Text.Split(",");
+
+                    if (parse.Length != 2)
+                        throw new Exception();
+
+                    insertText = parse[0];
+                    insertPosition = Convert.ToInt32(parse[1]);
+
+                    await InsertCharAsync(insertText, insertPosition);
+                }
+
+                if (!String.IsNullOrEmpty(deleteCharText.Text))
+                {
+                    deletePosition = Convert.ToInt32(deleteCharText.Text);
+                    await DeleteCharAsync(deletePosition);
+                }
+
+                MessageBox.Show("작업 완료!!!");
+            }
+            catch (Exception ex)
             {
-                MessageBox.Show("작업을 아무것도 선택하지 않았습니다.");
-                return;
+                MessageBox.Show($"에러 발생!!!\r\n{ex.Message}");
             }
-
-            if (!String.IsNullOrEmpty(insertCharText.Text))
-            {
-                string[] parse = insertCharText.Text.Split(",");
-                insertText = parse[0];
-                insertPosition = Convert.ToInt32(parse[1]);
-
-                await InsertCharAsync(insertText, insertPosition);
-            }
-
-            if (!String.IsNullOrEmpty(deleteCharText.Text))
-            {
-                deletePosition = Convert.ToInt32(deleteCharText.Text);
-                await DeleteCharAsync(deletePosition);
-            }
-
-            MessageBox.Show("작업 완료!!!");
         }
 
         private Task InsertCharAsync(string character, int position)
         {
-            return Task.Run(() => {
+            return Task.Run(() =>
+            {
                 foreach (var file in fileList)
                 {
 
@@ -88,7 +100,8 @@ namespace WinFormsApp1
 
         private Task DeleteCharAsync(int position)
         {
-            return Task.Run(() => {
+            return Task.Run(() =>
+            {
                 foreach (var file in fileList)
                 {
                     var reader = File.ReadAllBytes(file);
